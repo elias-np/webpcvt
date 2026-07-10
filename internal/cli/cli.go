@@ -12,9 +12,12 @@ import (
 
 const defaultQuality = 80
 
+// ErrVersion is returned when the user requests the version information.
+var ErrVersion = errors.New("version requested")
+
 // Run parses arguments and starts the conversion workflow.
-func Run(args []string) error {
-	options, err := Parse(args)
+func Run(args []string, version string) error {
+	options, err := Parse(args, version)
 	if err != nil {
 		return err
 	}
@@ -23,12 +26,16 @@ func Run(args []string) error {
 }
 
 // Parse validates command line arguments and returns conversion options.
-func Parse(args []string) (convert.Options, error) {
+func Parse(args []string, version string) (convert.Options, error) {
 	quality := defaultQuality
 	paths := make([]string, 0, 2)
 
 	for index := 0; index < len(args); index++ {
 		arg := args[index]
+		if arg == "-v" || arg == "--version" {
+			fmt.Println("webpcvt", version)
+			return convert.Options{}, ErrVersion
+		}
 		if arg == "-q" {
 			parsedQuality, nextIndex, err := parseQuality(args, index)
 			if err != nil {

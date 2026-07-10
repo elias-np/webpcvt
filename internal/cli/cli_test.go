@@ -8,8 +8,10 @@ import (
 	"webpcvt/internal/testutil"
 )
 
+const testVersion = "0.1.0-test"
+
 func TestParseWithExplicitOutput(t *testing.T) {
-	options, err := Parse([]string{"image.jpg", "-q", "85", "out.webp"})
+	options, err := Parse([]string{"image.jpg", "-q", "85", "out.webp"}, testVersion)
 	if err != nil {
 		t.Fatalf("Parse returned error: %v", err)
 	}
@@ -22,7 +24,7 @@ func TestParseWithExplicitOutput(t *testing.T) {
 }
 
 func TestParseUsesDefaultOutput(t *testing.T) {
-	options, err := Parse([]string{"assets/image.png", "-q", "70"})
+	options, err := Parse([]string{"assets/image.png", "-q", "70"}, testVersion)
 	if err != nil {
 		t.Fatalf("Parse returned error: %v", err)
 	}
@@ -35,7 +37,7 @@ func TestParseUsesDefaultOutput(t *testing.T) {
 }
 
 func TestParseUsesDefaultQuality(t *testing.T) {
-	options, err := Parse([]string{"image.jpg"})
+	options, err := Parse([]string{"image.jpg"}, testVersion)
 	if err != nil {
 		t.Fatalf("Parse returned error: %v", err)
 	}
@@ -45,22 +47,31 @@ func TestParseUsesDefaultQuality(t *testing.T) {
 	}
 }
 
+func TestParseVersionFlag(t *testing.T) {
+	for _, flag := range []string{"-v", "--version"} {
+		_, err := Parse([]string{flag}, testVersion)
+		if err != ErrVersion {
+			t.Fatalf("Parse(%q) error = %v, want ErrVersion", flag, err)
+		}
+	}
+}
+
 func TestParseRejectsMissingInput(t *testing.T) {
-	_, err := Parse([]string{"-q", "85"})
+	_, err := Parse([]string{"-q", "85"}, testVersion)
 	if err == nil {
 		t.Fatal("Parse returned nil error")
 	}
 }
 
 func TestParseRejectsInvalidQuality(t *testing.T) {
-	_, err := Parse([]string{"image.jpg", "-q", "101"})
+	_, err := Parse([]string{"image.jpg", "-q", "101"}, testVersion)
 	if err == nil {
 		t.Fatal("Parse returned nil error")
 	}
 }
 
 func TestParseRejectsTooManyArguments(t *testing.T) {
-	_, err := Parse([]string{"image.jpg", "one.webp", "two.webp"})
+	_, err := Parse([]string{"image.jpg", "one.webp", "two.webp"}, testVersion)
 	if err == nil {
 		t.Fatal("Parse returned nil error")
 	}
@@ -72,7 +83,7 @@ func TestRunCallsConversionWorkflow(t *testing.T) {
 	output := filepath.Join(dir, "image.webp")
 	testutil.WritePNG(t, input)
 
-	if err := Run([]string{input, "-q", "80", output}); err != nil {
+	if err := Run([]string{input, "-q", "80", output}, testVersion); err != nil {
 		t.Fatalf("Run returned error: %v", err)
 	}
 
