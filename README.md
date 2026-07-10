@@ -41,13 +41,13 @@ The plan is to grow it step by step: single-file conversion first, then batch co
 
 ### Windows (64-bit)
 
-1. Download `webpcvt-windows-amd64.zip`.
+1. Download [webpcvt-windows-amd64.zip](https://github.com/elias-np/webpcvt/releases/download/v0.1.0/webpcvt-windows-amd64.zip).
 2. Extract webpcvt.exe to a folder of your choice (e.g. C:\webpcvt) and add that folder to your PATH.
 3. Open a new terminal and run `webpcvt -v` to check it's working.
 
 ### Linux (64-bit)
 
-1. Download `webpcvt-linux-amd64.tar.gz`.
+1. Download [webpcvt-linux-amd64.tar.gz].(https://github.com/elias-np/webpcvt/releases/download/v0.1.0/webpcvt-linux-amd64.tar.gz)
 2. Extract and install:
 
 ```bash
