@@ -1,47 +1,49 @@
 # webpcvt
 
-webpcvt is a command-line tool written in Go that converts common image formats, such as JPG and PNG, into WebP. The idea behind it is fairly simple: offer a fast and direct way of doing that conversion without needing to open an image editor or depend on some online service to get it done.
+webpcvt is a command-line tool written in Go. It converts JPG and PNG images to WebP.
 
-The project came out of a practical, everyday need, since converting images to WebP tends to be a recurring task for anyone working on website performance, given that WebP usually produces a much smaller file while keeping an acceptable visual quality, and having that available straight from the terminal, integrated into scripts or into any build pipeline, ends up saving a fair amount of time compared to doing that process by hand, one image at a time, through a GUI.
+To be precise about what that means: webpcvt does not implement its own WebP encoder. It vendors libwebp, the official WebP library maintained by Google, and calls it directly to do the actual conversion. What webpcvt adds is the packaging around that. A single binary, sensible defaults, and a command-line interface built for one specific job: converting images to WebP from a terminal, a script, or a CI pipeline, without asking you to install or compile libwebp yourself first.
 
-What makes webpcvt worth using, beyond just being "another WebP converter," comes down to a few practical points:
+That distinction matters. The encoding logic, the compression algorithm, the quality behavior, all of that comes from libwebp itself. webpcvt's job is to make that library convenient to reach for in a very specific context: everyday, script-friendly, one-command image conversion.
 
-- **Simple** - no complicated flags to memorize, no configuration files, nothing to set up first. You point it at an image and it converts.
-- **Portable** - it ships as a single binary, so there's nothing else to install on the target machine. No runtime, no separate libraries to pull in first. Download it, drop it somewhere in your `PATH`, and it works.
-- **Fast** - being written in Go, it starts instantly and processes images without the overhead of a scripting runtime, which matters when it's called dozens or hundreds of times inside a batch job or a CI pipeline.
-- **Practical** - sensible defaults (a default quality of 80, automatic output naming) mean the common case, "just convert this file," takes a single short command, without having to think about it.
+## Why this exists
+
+Converting images to WebP is a recurring task for anyone working on website performance. WebP usually produces a much smaller file while keeping acceptable visual quality.  Having it available straight from the terminal, wired into scripts or a build pipeline, saves real time.
+
+## What webpcvt actually does
+
+- **Wraps libwebp.** The conversion itself is handled by libwebp, vendored directly into the binary. webpcvt does not reimplement WebP encoding; it exposes libwebp through a simple CLI.
+- **Simple.** No complicated flags to memorize, no configuration files, nothing to set up first. Point it at an image and it converts.
+- **Portable.** Because libwebp is vendored in, the result is a single binary. Nothing else to install on the target machine, no separate libwebp package, no runtime.
+- **Fast.** Go starts instantly, and libwebp does the encoding at native speed. There's no scripting-runtime overhead, which matters when the tool runs dozens or hundreds of times inside a batch job.
+- **Practical.** Sensible defaults (quality 80, automatic output naming) mean the common case takes one short command.
 
 ## How it works
-
-The basic syntax planned for the first version is the following.
 
 ```bash
 webpcvt image.jpg -q 85 output.webp
 ```
 
-In this example, `image.jpg` is the input file that will be converted, the `-q` flag sets the compression quality applied while generating the WebP file, accepting a numeric value that usually ranges from 0 to 100, where the higher the number, the better the final quality and, consequently, the larger the resulting file, and `output.webp` is the name of the output file, which is an optional argument.
+`image.jpg` is the input file. The `-q` flag sets the quality passed straight to libwebp's encoder, a number from 0 to 100. Higher means better quality and a bigger file. `output.webp` is optional.
 
-If the output file is not given when calling the command, webpcvt will automatically assume the same name as the input file, just swapping the extension to `.webp`, so running `webpcvt image.jpg -q 85` without specifying anything after the quality flag will generate a file called `image.webp` in the same folder, which makes everyday use much leaner when you just want to convert an image quickly without worrying about typing an output name every single time.
+If you skip the output name, webpcvt reuses the input name and swaps the extension to `.webp`. So `webpcvt image.jpg -q 85` on its own produces `image.webp` in the same folder. One less thing to type every time.
 
 ## Project status
 
-This project is in its early stages of development, so the functionality described here represents the initial goal and not necessarily everything that is already implemented and working in the repository, and the idea is to evolve it gradually, starting with basic conversion of a single file and then possibly expanding into other directions, such as batch conversion of entire directories, support for other input formats besides JPG and PNG, and other flags that make sense for the day-to-day workflow of whoever ends up using the tool.
-
-The project is open source and the license is still to be decided, but the intention is to keep the code open so that anyone can use it, study it, suggest improvements or adapt it to their own workflow, and contributions are welcome once the initial structure of the repository is a bit more mature.
+The plan is to grow it step by step: single-file conversion first, then batch conversion of whole directories, support for more input formats, and other flags that make sense day to day. 
 
 ## What's included
 
-- Lossy conversion with adjustable quality (`-q`). Default quality is 80 when `-q` is omitted.
-- `-v` flag to print the installed version.
-- Automatic output naming (changes the extension to `.webp` if no output name is provided).
+- Lossy conversion through libwebp, with adjustable quality (`-q`). Default is 80 when `-q` is omitted.
+- Automatic output naming (swaps the extension to `.webp` when no output name is given).
 
 ## Installation
 
 ### Windows (64-bit)
 
 1. Download `webpcvt-windows-amd64.zip`.
-2. Extract `webpcvt.exe` and place it in a folder that is in your `PATH` (e.g. `C:\webpcvt`).
-3. Open a new terminal and run `webpcvt -v` to verify.
+2. Extract webpcvt.exe to a folder of your choice (e.g. C:\webpcvt) and add that folder to your PATH.
+3. Open a new terminal and run `webpcvt -v` to check it's working.
 
 ### Linux (64-bit)
 
@@ -54,14 +56,16 @@ sudo mv webpcvt /usr/local/bin/
 sudo chmod +x /usr/local/bin/webpcvt
 ```
 
-3. Run `webpcvt -v` to verify.
+3. Run `webpcvt -v` to check it's working.
+
+Because libwebp is vendored into the binary, no extra install step is needed for it. Whatever platform build you download already has it built in.
 
 ## Usage
 
 ```bash
 webpcvt input.png
 ```
-Converts using the default quality (80) and saves the result as `input.webp` in the same folder.
+Converts with the default quality (80) and saves the result as `input.webp` in the same folder.
 
 ```bash
 webpcvt input.png output.webp
@@ -71,7 +75,7 @@ Converts and saves the result with a custom output name or path.
 ```bash
 webpcvt input.png -q 90
 ```
-Converts using a custom quality (0–100). This can be combined with a custom output name:
+Converts with a custom quality (0 to 100). Can be combined with a custom output name:
 
 ```bash
 webpcvt input.jpg output.webp -q 50
